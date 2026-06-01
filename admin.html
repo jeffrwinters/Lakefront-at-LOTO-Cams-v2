@@ -120,15 +120,21 @@ document.getElementById('stats').innerHTML=`
       <option value="ipcamlive" ${c.provider==='ipcamlive' || c.provider==='ipcamlive.com'?'selected':''}>IPCamLive</option>
       <option ${c.provider==='hls'?'selected':''}>hls</option>
    </select>
-   <input value="${c.source||''}" size="20" onchange="cams[${i}].source=this.value">
-   <input value="${c.slug||''}" onchange="cams[${i}].slug=this.value">
+   <input value="${c.source||''}" size="20"
+      placeholder="${(c.provider==='ipcamlive'||c.provider==='ipcamlive.com')?'Camera Alias':'Twitch Channel'}"
+      onchange="cams[${i}].source=this.value">
+
+   ${(c.provider==='ipcamlive'||c.provider==='ipcamlive.com')
+      ? ''
+      : `<input value="${c.slug||''}" placeholder="Slug" onchange="cams[${i}].slug=this.value">`}
+
    <select onchange="cams[${i}].status=this.value">
       <option value="active" ${c.status==='active'?'selected':''}>active</option>
       <option value="disabled" ${c.status==='disabled'?'selected':''}>disabled</option>
    </select>
    <span style="cursor:grab;font-size:18px">☰</span>
    <button onclick="toggleFav(${i})">${c.favorite?'⭐':'☆'}</button>
-   <button onclick="checkOne(${i})">Check</button>
+   <button onclick="checkOne(${i})">Check</button><button onclick="previewCam(${i})">Preview</button>
    <button onclick="delCamera(${i})">Delete</button>
    <span class="small">${c.health||'not checked'} ${c.last_checked||''}</span>
    `;
@@ -163,17 +169,9 @@ function toggleFav(i){
 
 async function probe(c){
  try{
-   let url='';
-
-   if(c.provider==='twitch'){
-     url='https://www.twitch.tv/'+c.source;
-   }
-   else if(c.provider==='ipcamlive' || c.provider==='ipcamlive.com'){
-     url='https://g1.ipcamlive.com/player/player.php?alias='+c.source;
-   }
-   else{
-     url=c.source;
-   }
+   let url=c.provider==='twitch'
+     ? 'https://www.twitch.tv/'+c.source
+     : c.source;
    await fetch(url,{mode:'no-cors'});
    return 'reachable';
  }catch(e){
@@ -255,6 +253,21 @@ function moveDown(i){
 window.addEventListener('scroll',()=>{
  document.body.classList.toggle('scrolled', window.scrollY>60);
 });
+
+function previewCam(i){
+ const c=cams[i];
+ let url='';
+ if(c.provider==='twitch'){
+   url='https://www.twitch.tv/'+c.source;
+ } else if(c.provider==='ipcamlive' || c.provider==='ipcamlive.com'){
+   url='https://g1.ipcamlive.com/player/player.php?alias='+c.source;
+ } else {
+   url=c.source;
+ }
+ window.open(url,'_blank');
+}
+
+
 load();
 
 </script>
