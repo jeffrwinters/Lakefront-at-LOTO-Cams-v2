@@ -12,9 +12,9 @@ html = requests.get(KRMS_URL, timeout=30).text
 
 ```
 m = re.search(
-    r'Water Temperature.*?<b>\s*([0-9.]+)',
+    r"Water Temperature.*?<b>\s*([0-9.]+)",
     html,
-    re.I | re.S
+    re.I | re.S,
 )
 
 if not m:
@@ -62,7 +62,7 @@ data = {
 "waterTemp": water_temp,
 "lakeLevel": round(lake_level, 2),
 "discharge": discharge,
-"trend": trend
+"trend": trend,
 }
 
 with open("lake_conditions.json", "w", encoding="utf-8") as f:
