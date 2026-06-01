@@ -19,9 +19,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          pip install requests
+- name: Install dependencies
+  run: |
+    pip install requests playwright
+    playwright install chromium
 
       - name: Update lake conditions
         run: |
