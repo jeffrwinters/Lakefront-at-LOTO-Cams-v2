@@ -1282,7 +1282,21 @@ function loadCam(idx) {
     .map(p => `parent=${p}`)
     .join('&');
 
-  const src = `https://player.twitch.tv/?channel=${cam.source}&${parentParams}&autoplay=true&muted=false`;
+  let src = '';
+
+  switch ((cam.provider || '').toLowerCase()) {
+
+    case 'ipcamlive':
+    case 'ipcamlive.com':
+      src = `https://g1.ipcamlive.com/player/player.php?alias=${cam.source}`;
+      break;
+
+    case 'twitch':
+    default:
+      src = `https://player.twitch.tv/?channel=${cam.source}&${parentParams}&autoplay=true&muted=false`;
+      break;
+  }
+
   document.getElementById('twitchFrame').src = src;
 
   // Update sidebar
@@ -1519,6 +1533,11 @@ function setupCastListeners() {
 
 function castCam(cam) {
   if (!castSession) return;
+
+  if ((cam.provider || '').toLowerCase() !== 'twitch') {
+    showToast('Casting currently supported only for Twitch cameras');
+    return;
+  }
   const mediaInfo = new chrome.cast.media.MediaInfo(`https://www.twitch.tv/${cam.source}`, 'video/mp4');
   mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
   mediaInfo.metadata.title = `${cam.venue} — ${cam.name}`;
