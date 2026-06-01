@@ -1,6 +1,17 @@
 [
   {
     "venue": "JB Hooks",
+    "camera_name": "Southeast",
+    "provider": "ipcamlive",
+    "source": "jbhooksleft",
+    "slug": "",
+    "status": "active",
+    "favorite": false,
+    "health": "reachable",
+    "last_checked": "6/1/2026, 1:10:39 PM"
+  },
+  {
+    "venue": "JB Hooks",
     "camera_name": "Bridge",
     "provider": "ipcamlive.com",
     "source": "jbhooksbridge",
