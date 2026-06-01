@@ -3,147 +3,627 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lakefront Camera Operations</title>
+<title>Lakefront at LOTO - Camera Operations</title>
 <style>
-body{font-family:Arial,sans-serif;background:#0b1226;color:#fff;margin:0;padding:20px}
-h1{margin:0 0 15px}
-.toolbar,.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-input,button{padding:10px;border-radius:8px;border:1px solid #334}
-button{cursor:pointer}
-.stats{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0 16px}
-.card{background:#132046;padding:10px 14px;border-radius:10px}
-.banner{display:none;background:#5a4200;padding:10px;border-radius:8px;margin-bottom:12px}
-.banner.show{display:block}
-.row{display:flex;justify-content:space-between;align-items:center;padding:10px;margin-bottom:6px;border-radius:10px;border:1px solid #334}
-.activeRow{background:rgba(0,128,0,.15)}
-.disabledRow{background:rgba(128,0,0,.15)}
-.left{display:flex;align-items:center;gap:10px}
-.drag{cursor:grab;font-size:20px}
-.meta{font-size:12px;color:#bcd}
-.fav{cursor:pointer}
-.filter.active{outline:2px solid #7ea1ff}
-.actions{display:flex;gap:6px;flex-wrap:wrap}
+  :root{
+    --bg:#0b1226;
+    --panel:#132046;
+    --panel2:#0f1a3a;
+    --line:#2f3f66;
+    --text:#f5f7ff;
+    --muted:#b9c6ee;
+    --green:#2ecc71;
+    --greenSoft:rgba(46,204,113,.14);
+    --red:#ff6b6b;
+    --redSoft:rgba(255,107,107,.14);
+    --yellow:#f7c948;
+    --yellowSoft:rgba(247,201,72,.14);
+    --blue:#7ea1ff;
+    --blueSoft:rgba(126,161,255,.14);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    padding:20px;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Arial,Helvetica,sans-serif;
+  }
+  h1{
+    margin:0 0 8px;
+    font-size:28px;
+    letter-spacing:.4px;
+  }
+  .sub{
+    color:var(--muted);
+    margin:0 0 18px;
+    font-size:14px;
+    line-height:1.45;
+  }
+  .toolbar,.filters,.sorts,.healthbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+  input,button{
+    font:inherit;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#0f1834;
+    color:var(--text);
+    padding:10px 12px;
+  }
+  input{
+    min-width:220px;
+    outline:none;
+  }
+  button{
+    cursor:pointer;
+    transition:transform .12s ease, background .12s ease, border-color .12s ease, opacity .12s ease;
+  }
+  button:hover{transform:translateY(-1px); border-color:#50659c}
+  button:active{transform:translateY(0)}
+  .btn-primary{background:#2446b5; border-color:#2f56d6}
+  .btn-warning{background:#8c5a00; border-color:#b67a00}
+  .btn-danger{background:#7a2030; border-color:#a63d52}
+  .btn-green{background:#145a32; border-color:#1f7a43}
+  .btn-ghost{background:#101935}
+  .btn-active{outline:2px solid var(--blue)}
+  .banner{
+    display:none;
+    background:#5a4200;
+    border:1px solid #8d6a00;
+    padding:10px 12px;
+    border-radius:10px;
+    margin:0 0 14px;
+    color:#fff7d6;
+  }
+  .banner.show{display:block}
+  .stats{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin:10px 0 14px;
+  }
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    padding:10px 14px;
+    border-radius:12px;
+    min-width:120px;
+  }
+  .card .k{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .card .v{font-size:18px;font-weight:700}
+  .legend{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:6px 0 14px;
+    color:var(--muted);
+    font-size:13px;
+  }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--panel2);
+  }
+  .list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .row{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:flex-start;
+    padding:12px 12px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--panel2);
+  }
+  .row.activeRow{background:var(--greenSoft)}
+  .row.disabledRow{background:var(--redSoft)}
+  .row.checkingRow{background:var(--yellowSoft)}
+  .row.failedRow{background:var(--redSoft); border-color:#8d4c4c}
+  .row.reachableRow{background:var(--greenSoft)}
+  .left{display:flex;align-items:flex-start;gap:10px;min-width:0;flex:1}
+  .drag{
+    cursor:grab;
+    font-size:20px;
+    line-height:1;
+    user-select:none;
+    opacity:.85;
+    padding-top:2px;
+  }
+  .fav{
+    cursor:pointer;
+    font-size:18px;
+    line-height:1;
+    user-select:none;
+    padding-top:1px;
+    width:22px;
+    text-align:center;
+  }
+  .title{
+    font-weight:700;
+    font-size:15px;
+    line-height:1.35;
+    word-break:break-word;
+  }
+  .meta{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:3px;
+    line-height:1.35;
+  }
+  .badges{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-top:8px;
+  }
+  .badge{
+    font-size:11px;
+    border-radius:999px;
+    padding:5px 9px;
+    border:1px solid var(--line);
+    background:#0f1834;
+  }
+  .badge.active{border-color:#1f8a52;background:rgba(46,204,113,.12);color:#c8ffd9}
+  .badge.disabled{border-color:#9b3f4c;background:rgba(255,107,107,.12);color:#ffd2d2}
+  .badge.checking{border-color:#b08a1e;background:rgba(247,201,72,.12);color:#fff1c1}
+  .badge.reachable{border-color:#1f8a52;background:rgba(46,204,113,.12);color:#c8ffd9}
+  .badge.failed{border-color:#9b3f4c;background:rgba(255,107,107,.12);color:#ffd2d2}
+  .badge.unknown{border-color:#54607f;background:#101935;color:var(--muted)}
+  .actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .mini{padding:8px 10px;border-radius:9px;font-size:13px}
+  .mini-open{background:#1e365f}
+  .mini-enable{background:#145a32}
+  .mini-disable{background:#7a2030}
+  .mini-verify{background:#7f5a12}
+  .right{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:8px;
+    min-width:155px;
+  }
+  .small{
+    font-size:12px;
+    color:var(--muted);
+    text-align:right;
+    line-height:1.35;
+  }
+  .handleRow{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .spacer{height:8px}
+  .hidden{display:none !important}
+  .dropHint{
+    border:1px dashed #5f74a5;
+    background:#0e1730;
+  }
+  .footerNote{
+    margin-top:16px;
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.45;
+  }
+  @media (max-width:760px){
+    .row{flex-direction:column}
+    .right{align-items:flex-start;min-width:0;width:100%}
+    .actions{justify-content:flex-start}
+    input{min-width:0;width:100%}
+  }
 </style>
 </head>
 <body>
-<h1>Camera Operations Dashboard</h1>
+  <h1>Camera Operations Dashboard</h1>
+  <p class="sub">
+    Manage camera order, status, favorites, and health checks from one place. Health checks are manual and only run when you click the button.
+  </p>
 
-<div id="changes" class="banner">Unsaved changes pending. Download cams.json when finished.</div>
+  <div id="banner" class="banner">Unsaved changes pending. Download cams.json when finished.</div>
 
-<div class="toolbar">
-<input id="search" placeholder="Search..." oninput="render()">
-<button onclick="sortAZ()">A-Z</button>
-<button onclick="sortVenue()">Venue</button>
-<button onclick="enableAll()">Enable All</button>
-<button onclick="disableAll()">Disable All</button>
-<button onclick="exportJson()">Download cams.json</button>
-</div>
+  <div class="toolbar">
+    <input id="search" placeholder="Search cameras..." oninput="render()">
+    <button class="btn-ghost" onclick="sortAZ()">A-Z</button>
+    <button class="btn-ghost" onclick="sortVenue()">Venue</button>
+    <button class="btn-primary" onclick="checkHealth()">Check Camera Health</button>
+    <button class="btn-warning" onclick="showFailedOnly()">Show Failed</button>
+    <button class="btn-danger" onclick="disableFailed()">Disable Failed Cameras</button>
+    <button class="btn-green" onclick="enableAll()">Enable All</button>
+    <button class="btn-danger" onclick="disableAll()">Disable All</button>
+    <button class="btn-primary" onclick="exportJson()">Download cams.json</button>
+  </div>
 
-<div class="filters">
-<button class="filter active" onclick="setFilter('all',this)">All</button>
-<button class="filter" onclick="setFilter('active',this)">Active</button>
-<button class="filter" onclick="setFilter('disabled',this)">Disabled</button>
-</div>
+  <div class="filters">
+    <button class="filter btn-active" data-filter="all" onclick="setFilter('all',this)">All</button>
+    <button class="filter" data-filter="active" onclick="setFilter('active',this)">Active</button>
+    <button class="filter" data-filter="disabled" onclick="setFilter('disabled',this)">Disabled</button>
+    <button class="filter" data-filter="failed" onclick="setFilter('failed',this)">Failed</button>
+    <button class="filter" data-filter="reachable" onclick="setFilter('reachable',this)">Reachable</button>
+    <button class="filter" data-filter="unchecked" onclick="setFilter('unchecked',this)">Not Checked</button>
+  </div>
 
-<div class="stats" id="stats"></div>
-<div id="list"></div>
+  <div class="sorts">
+    <button class="btn-ghost" onclick="clearHealth()">Clear Health</button>
+    <button class="btn-ghost" onclick="toggleFavoritesFirst()">Favorites First</button>
+    <button class="btn-ghost" onclick="resetOrder()">Restore Original Order</button>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div class="legend">
+    <span class="pill">🟢 Active</span>
+    <span class="pill">🔴 Disabled</span>
+    <span class="pill">🟡 Checking</span>
+    <span class="pill">✅ Reachable</span>
+    <span class="pill">❌ Failed</span>
+    <span class="pill">⭐ Favorite</span>
+    <span class="pill">☰ Drag to reorder</span>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <div class="footerNote">
+    Health checks test whether the camera source responds from the browser. That is a practical reachability check, not a guarantee that the live stream is currently broadcasting.
+  </div>
 
 <script>
-let cams=[];
-let filter='all';
-let dirty=false;
+let cams = [];
+let originalOrder = [];
+let filter = 'all';
+let dirty = false;
+let showFailedMode = false;
+let favoritesFirst = false;
+let lastDraggedIndex = null;
 
-async function load(){
- const r=await fetch('cams.json');
- cams=await r.json();
- render();
+function safeText(s) {
+  return (s ?? '').toString();
 }
 
-function markDirty(){
- dirty=true;
- document.getElementById('changes').classList.add('show');
+function statusLabel(cam) {
+  if (cam.health === 'checking') return 'Checking';
+  if (cam.health === 'reachable') return 'Reachable';
+  if (cam.health === 'failed') return 'Failed';
+  return 'Not Checked';
 }
 
-function setFilter(f,btn){
- filter=f;
- document.querySelectorAll('.filter').forEach(b=>b.classList.remove('active'));
- btn.classList.add('active');
- render();
+function healthClass(cam) {
+  if (cam.health === 'checking') return 'checking';
+  if (cam.health === 'reachable') return 'reachable';
+  if (cam.health === 'failed') return 'failed';
+  return 'unknown';
 }
 
-function render(){
- const q=document.getElementById('search').value.toLowerCase();
- const active=cams.filter(c=>c.status==='active').length;
- document.getElementById('stats').innerHTML=`
- <div class="card">Total ${cams.length}</div>
- <div class="card">🟢 ${active} Active</div>
- <div class="card">🔴 ${cams.length-active} Disabled</div>`;
+async function load() {
+  const r = await fetch('cams.json', { cache: 'no-store' });
+  cams = await r.json();
+  originalOrder = cams.map(c => ({ ...c }));
+  cams.forEach(c => {
+    if (!('favorite' in c)) c.favorite = false;
+    if (!('health' in c)) c.health = '';
+    if (!('last_checked' in c)) c.last_checked = '';
+    if (!('health_note' in c)) c.health_note = '';
+  });
+  render();
+}
 
- const list=document.getElementById('list');
- list.innerHTML='';
+function markDirty() {
+  dirty = true;
+  document.getElementById('banner').classList.add('show');
+}
 
- cams.forEach((cam,i)=>{
-   if(filter!=='all' && cam.status!==filter) return;
-   if(!(`${cam.venue} ${cam.camera_name}`).toLowerCase().includes(q)) return;
+function clearDirty() {
+  dirty = false;
+  document.getElementById('banner').classList.remove('show');
+}
 
-   const row=document.createElement('div');
-   row.className='row '+(cam.status==='active'?'activeRow':'disabledRow');
-   row.draggable=true;
+function setFilter(f, btn) {
+  filter = f;
+  showFailedMode = false;
+  document.querySelectorAll('.filter').forEach(b => b.classList.remove('btn-active'));
+  if (btn) btn.classList.add('btn-active');
+  render();
+}
 
-   row.ondragstart=e=>e.dataTransfer.setData('idx',i);
-   row.ondragover=e=>e.preventDefault();
-   row.ondrop=e=>{
+function showFailedOnly() {
+  showFailedMode = true;
+  filter = 'failed';
+  document.querySelectorAll('.filter').forEach(b => b.classList.remove('btn-active'));
+  const match = [...document.querySelectorAll('.filter')].find(b => b.dataset.filter === 'failed');
+  if (match) match.classList.add('btn-active');
+  render();
+}
+
+function passesFilter(cam) {
+  if (showFailedMode) return cam.health === 'failed';
+  if (filter === 'all') return true;
+  if (filter === 'active') return cam.status === 'active';
+  if (filter === 'disabled') return cam.status === 'disabled';
+  if (filter === 'failed') return cam.health === 'failed';
+  if (filter === 'reachable') return cam.health === 'reachable';
+  if (filter === 'unchecked') return !cam.health;
+  return true;
+}
+
+function render() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  const active = cams.filter(c => c.status === 'active').length;
+  const disabled = cams.length - active;
+  const reachable = cams.filter(c => c.health === 'reachable').length;
+  const failed = cams.filter(c => c.health === 'failed').length;
+  const checking = cams.filter(c => c.health === 'checking').length;
+  const unchecked = cams.filter(c => !c.health).length;
+  const favorites = cams.filter(c => c.favorite).length;
+
+  document.getElementById('stats').innerHTML = `
+    <div class="card"><div class="k">Total</div><div class="v">${cams.length}</div></div>
+    <div class="card"><div class="k">Active</div><div class="v">🟢 ${active}</div></div>
+    <div class="card"><div class="k">Disabled</div><div class="v">🔴 ${disabled}</div></div>
+    <div class="card"><div class="k">Reachable</div><div class="v">✅ ${reachable}</div></div>
+    <div class="card"><div class="k">Failed</div><div class="v">❌ ${failed}</div></div>
+    <div class="card"><div class="k">Checking</div><div class="v">🟡 ${checking}</div></div>
+    <div class="card"><div class="k">Not Checked</div><div class="v">⚪ ${unchecked}</div></div>
+    <div class="card"><div class="k">Favorites</div><div class="v">⭐ ${favorites}</div></div>
+  `;
+
+  let visible = cams
+    .map((cam, i) => ({ cam, i }))
+    .filter(({ cam }) => passesFilter(cam))
+    .filter(({ cam }) => (`${cam.venue} ${cam.camera_name} ${cam.provider} ${cam.source}`).toLowerCase().includes(q));
+
+  if (favoritesFirst) {
+    visible.sort((a, b) => (b.cam.favorite === true) - (a.cam.favorite === true));
+  }
+
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+
+  visible.forEach(({ cam, i }) => {
+    const row = document.createElement('div');
+    row.className = 'row ' + (
+      cam.health === 'checking' ? 'checkingRow' :
+      cam.health === 'reachable' ? 'reachableRow' :
+      cam.health === 'failed' ? 'failedRow' :
+      cam.status === 'active' ? 'activeRow' : 'disabledRow'
+    );
+
+    row.draggable = true;
+    row.dataset.idx = i;
+
+    row.ondragstart = e => {
+      lastDraggedIndex = i;
+      e.dataTransfer.setData('text/plain', String(i));
+      e.dataTransfer.effectAllowed = 'move';
+    };
+
+    row.ondragover = e => {
       e.preventDefault();
-      const from=parseInt(e.dataTransfer.getData('idx'));
-      const moved=cams.splice(from,1)[0];
-      cams.splice(i,0,moved);
-      markDirty();
-      render();
-   };
+      row.classList.add('dropHint');
+    };
 
-   const fav = cam.favorite ? '⭐' : '☆';
+    row.ondragleave = () => row.classList.remove('dropHint');
 
-   row.innerHTML=`
-   <div class="left">
-      <div class="drag">☰</div>
-      <div class="fav" onclick="toggleFav(${i})">${fav}</div>
-      <div>
-        <div><b>${cam.venue} — ${cam.camera_name}</b></div>
-        <div class="meta">${cam.provider||''} | ${cam.status}</div>
+    row.ondrop = e => {
+      e.preventDefault();
+      row.classList.remove('dropHint');
+      const from = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      const to = i;
+      if (Number.isNaN(from) || from === to) return;
+      moveCamera(from, to);
+    };
+
+    const statusBadge = `<span class="badge ${cam.status}">${cam.status === 'active' ? 'Active' : 'Disabled'}</span>`;
+    const healthBadge = `<span class="badge ${healthClass(cam)}">${statusLabel(cam)}</span>`;
+    const providerBadge = `<span class="badge unknown">${safeText(cam.provider || 'unknown')}</span>`;
+    const favBadge = cam.favorite ? `<span class="badge reachable">⭐ Favorite</span>` : '';
+    const checkedText = cam.last_checked ? `Last checked: ${cam.last_checked}` : 'Last checked: never';
+
+    row.innerHTML = `
+      <div class="left">
+        <div class="handleRow">
+          <div class="drag" title="Drag to reorder">☰</div>
+          <div class="fav" title="Toggle favorite" onclick="toggleFav(${i})">${cam.favorite ? '⭐' : '☆'}</div>
+        </div>
+        <div style="min-width:0;flex:1">
+          <div class="title">${escapeHtml(cam.venue)} — ${escapeHtml(cam.camera_name)}</div>
+          <div class="meta">${escapeHtml(cam.provider || '')}${cam.provider ? ' | ' : ''}${escapeHtml(cam.source || '')}</div>
+          <div class="badges">${statusBadge}${healthBadge}${providerBadge}${favBadge}</div>
+        </div>
       </div>
-   </div>
-   <div class="actions">
-      <button onclick="openCam(${i})">Open</button>
-      <button onclick="toggle(${i})">${cam.status==='active'?'Disable':'Enable'}</button>
-   </div>`;
-   list.appendChild(row);
- });
+      <div class="right">
+        <div class="small">${checkedText}${cam.health_note ? '<br>' + escapeHtml(cam.health_note) : ''}</div>
+        <div class="actions">
+          <button class="mini mini-open" onclick="openCam(${i})">Open</button>
+          <button class="mini mini-verify" onclick="verifyOne(${i})">Check</button>
+          <button class="mini ${cam.status === 'active' ? 'mini-disable' : 'mini-enable'}" onclick="toggle(${i})">${cam.status === 'active' ? 'Disable' : 'Enable'}</button>
+        </div>
+      </div>
+    `;
+
+    list.appendChild(row);
+  });
 }
 
-function toggle(i){ cams[i].status=cams[i].status==='active'?'disabled':'active'; markDirty(); render(); }
-function toggleFav(i){ cams[i].favorite=!cams[i].favorite; markDirty(); render(); }
-
-function openCam(i){
- const c=cams[i];
- if(c.provider && c.provider.toLowerCase().includes('twitch'))
-   window.open('https://www.twitch.tv/'+c.source,'_blank');
- else
-   window.open(c.source,'_blank');
+function escapeHtml(str) {
+  return safeText(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
-function sortAZ(){ cams.sort((a,b)=>(a.venue+' '+a.camera_name).localeCompare(b.venue+' '+b.camera_name)); markDirty(); render(); }
-function sortVenue(){ cams.sort((a,b)=>a.venue.localeCompare(b.venue)||a.camera_name.localeCompare(b.camera_name)); markDirty(); render(); }
-function enableAll(){ cams.forEach(c=>c.status='active'); markDirty(); render(); }
-function disableAll(){ cams.forEach(c=>c.status='disabled'); markDirty(); render(); }
+function moveCamera(from, to) {
+  const moved = cams.splice(from, 1)[0];
+  cams.splice(to, 0, moved);
+  markDirty();
+  render();
+}
 
-function exportJson(){
- const blob=new Blob([JSON.stringify(cams,null,2)],{type:'application/json'});
- const a=document.createElement('a');
- a.href=URL.createObjectURL(blob);
- a.download='cams.json';
- a.click();
- dirty=false;
- document.getElementById('changes').classList.remove('show');
+function toggle(i) {
+  cams[i].status = cams[i].status === 'active' ? 'disabled' : 'active';
+  markDirty();
+  render();
+}
+
+function toggleFav(i) {
+  cams[i].favorite = !cams[i].favorite;
+  markDirty();
+  render();
+}
+
+function openCam(i) {
+  const c = cams[i];
+  const src = safeText(c.source);
+  if (c.provider && c.provider.toLowerCase().includes('twitch')) {
+    window.open(`https://www.twitch.tv/${src}`, '_blank', 'noopener,noreferrer');
+  } else if (/^https?:\/\//i.test(src)) {
+    window.open(src, '_blank', 'noopener,noreferrer');
+  } else {
+    window.open(src, '_blank', 'noopener,noreferrer');
+  }
+}
+
+function sortAZ() {
+  cams.sort((a, b) => (a.venue + ' ' + a.camera_name).localeCompare(b.venue + ' ' + b.camera_name));
+  markDirty();
+  render();
+}
+
+function sortVenue() {
+  cams.sort((a, b) => a.venue.localeCompare(b.venue) || a.camera_name.localeCompare(b.camera_name));
+  markDirty();
+  render();
+}
+
+function resetOrder() {
+  cams = originalOrder.map(c => ({ ...c }));
+  cams.forEach(c => {
+    if (!('favorite' in c)) c.favorite = false;
+    if (!('health' in c)) c.health = '';
+    if (!('last_checked' in c)) c.last_checked = '';
+    if (!('health_note' in c)) c.health_note = '';
+  });
+  markDirty();
+  render();
+}
+
+function enableAll() {
+  cams.forEach(c => c.status = 'active');
+  markDirty();
+  render();
+}
+
+function disableAll() {
+  cams.forEach(c => c.status = 'disabled');
+  markDirty();
+  render();
+}
+
+function clearHealth() {
+  cams.forEach(c => {
+    c.health = '';
+    c.last_checked = '';
+    c.health_note = '';
+  });
+  markDirty();
+  render();
+}
+
+function toggleFavoritesFirst() {
+  favoritesFirst = !favoritesFirst;
+  render();
+}
+
+function exportJson() {
+  const blob = new Blob([JSON.stringify(cams, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cams.json';
+  a.click();
+  clearDirty();
+}
+
+function setHealthState(i, state, note = '') {
+  const cam = cams[i];
+  cam.health = state;
+  cam.last_checked = new Date().toLocaleString();
+  cam.health_note = note;
+}
+
+function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(new DOMException('Timeout', 'AbortError')), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal, cache: 'no-store' })
+    .finally(() => clearTimeout(t));
+}
+
+function providerUrl(cam) {
+  const src = safeText(cam.source).trim();
+  if (cam.provider && cam.provider.toLowerCase().includes('twitch')) {
+    return `https://www.twitch.tv/${src}`;
+  }
+  if (/^https?:\/\//i.test(src)) return src;
+  return src.startsWith('//') ? `https:${src}` : `https://${src}`;
+}
+
+async function probeCamera(cam) {
+  const url = providerUrl(cam);
+  try {
+    // no-cors gives an opaque response if the server is reachable.
+    await fetchWithTimeout(url, { mode: 'no-cors', method: 'GET' }, 9000);
+    return { state: 'reachable', note: 'Source responded in browser.' };
+  } catch (err) {
+    return { state: 'failed', note: (err && err.name === 'AbortError') ? 'Timed out.' : 'Request failed.' };
+  }
+}
+
+async function verifyOne(i) {
+  setHealthState(i, 'checking', 'Verifying now...');
+  render();
+  const result = await probeCamera(cams[i]);
+  setHealthState(i, result.state, result.note);
+  markDirty();
+  render();
+}
+
+async function checkHealth() {
+  const buttons = [...document.querySelectorAll('button')];
+  buttons.forEach(b => b.disabled = true);
+  try {
+    for (let i = 0; i < cams.length; i++) {
+      setHealthState(i, 'checking', 'Verifying now...');
+      render();
+      const result = await probeCamera(cams[i]);
+      setHealthState(i, result.state, result.note);
+      render();
+      await new Promise(r => setTimeout(r, 50));
+    }
+    markDirty();
+    render();
+  } finally {
+    buttons.forEach(b => b.disabled = false);
+  }
+}
+
+function disableFailed() {
+  const failed = cams.filter(c => c.health === 'failed');
+  if (!failed.length) return;
+  const ok = confirm(`Disable ${failed.length} failed cameras?`);
+  if (!ok) return;
+  cams.forEach(c => { if (c.health === 'failed') c.status = 'disabled'; });
+  markDirty();
+  render();
 }
 
 load();
