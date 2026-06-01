@@ -24,13 +24,24 @@ def get_water_temp():
 
 
 def get_ameren_data():
-    html = requests.get(AMEREN_URL, timeout=30).text
+    html = requests.get(
+        AMEREN_URL,
+        timeout=30,
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/137.0.0.0 Safari/537.36"
+            )
+        }
+    ).text
 
-    print("HTML LENGTH:", len(html))
-    print("HEADWATER FOUND:", "Headwater" in html)
-    print("TAILWATER FOUND:", "Tailwater" in html)
-    print("DISCHARGE FOUND:", "Discharge" in html)
-    print("REPORT FOUND:", "658." in html)
+    if "659." in html:
+        print("FOUND TABLE DATA")
+    else:
+        print("NO TABLE DATA")
+
+    print(html[:10000])
 
     raise Exception("Debug stop")
 
