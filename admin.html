@@ -22,7 +22,7 @@ body.scrolled .header h1{font-size:22px}
 body.scrolled .header p{opacity:0;max-height:0;overflow:hidden;margin:0}
 .header h1{margin:0;font-size:32px}
 .header p{margin:4px 0 0;color:var(--muted)}
-.toolbar{position:sticky;top:58px;background:#132046;padding:12px;border-radius:0 0 14px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;z-index:240;box-shadow:0 14px 30px rgba(0,0,0,.55),0 3px 0 #3550a8}
+.toolbar{position:sticky;top:0;background:#132046;padding:12px;border-radius:0 0 14px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;z-index:245;box-shadow:0 14px 30px rgba(0,0,0,.55),0 3px 0 #3550a8}
 button,input,select{padding:10px;border-radius:10px;border:1px solid #3550a8}
 button{background:var(--panel2);color:white;cursor:pointer}
 input,select{background:#0f1730;color:white}
@@ -33,12 +33,22 @@ input,select{background:#0f1730;color:white}
 .reachable{border-left:5px solid var(--green)}
 .failed{border-left:5px solid var(--red)}
 .small{font-size:12px;color:#c6d0ee}
+
+.sticky-shell{
+position:sticky;
+top:0;
+z-index:245;
+background:linear-gradient(180deg,#09152f,#132046);
+margin:-20px -20px 16px -20px;
+padding:0 20px 12px 20px;
+}
 </style>
+
 
 </head>
 <body>
 
-<div class="header">
+<div class="sticky-shell"><div class="header">
 <img src="logo.png" alt="Lakefront at LOTO Logo">
 <div>
 <h1>Lakefront at LOTO</h1>
@@ -55,7 +65,7 @@ input,select{background:#0f1730;color:white}
 <button onclick="disableFailed()">Disable Failed</button>
 <button onclick="download()">Download cams.json</button>
 <progress id="progressbar" value="0" max="100" style="width:200px;display:none"></progress> <span id="progress"></span>
-</div>
+</div></div>
 
 <div id="list"></div>
 
@@ -102,7 +112,7 @@ document.getElementById('stats').innerHTML=`
    };
 
    row.innerHTML=`
-   <button title="Top" onclick="moveTop(${i})">⏫</button><button title="Move Up" onclick="moveUp(${i})">▲</button><button title="Move Down" onclick="moveDown(${i})">▼</button><button title="Bottom" onclick="moveBottom(${i})">⏬</button>
+   <button title="Top" onclick="moveTop(${i})">⏶⏶</button><button title="Move Up" onclick="moveUp(${i})">⏶</button><button title="Move Down" onclick="moveDown(${i})">⏷</button><button title="Bottom" onclick="moveBottom(${i})">⏷⏷</button>
 
    <input value="${c.venue||''}" onchange="cams[${i}].venue=this.value">
    <input value="${c.camera_name||''}" onchange="cams[${i}].camera_name=this.value">
