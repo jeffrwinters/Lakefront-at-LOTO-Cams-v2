@@ -75,7 +75,7 @@ let favoritesOnly=false;
 let dragIndex=null;
 
 async function load(){
- const r=await fetch('cams.json');
+ const r=await fetch(`cams.json?v=${Date.now()}`, { cache: 'no-store' });
  cams=await r.json();
  render();
 }
