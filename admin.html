@@ -3,151 +3,68 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Lakefront Admin v3</title>
+<title>Lakefront at LOTO - Operations Center</title>
 <style>
-body{font-family:Arial;background:#0b1226;color:white;padding:20px}
-.toolbar,.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.toolbar{margin-bottom:15px}
-input,select,button{padding:8px}
-.row{border:1px solid #334;padding:10px;margin:8px 0;border-radius:8px}
-.failed{background:#401818}
-.reachable{background:#163a20}
-.small{font-size:12px;color:#ccc}
+:root{
+--bg:#0b1226;--panel:#132046;--panel2:#1a2a58;--text:#fff;--muted:#c6d0ee;
+--green:#2ecc71;--red:#ff6b6b;--yellow:#f7c948;
+}
+body{font-family:Arial,sans-serif;background:linear-gradient(180deg,#08101f,#0b1226);color:var(--text);margin:0;padding:20px}
+.header{background:var(--panel);padding:18px;border-radius:16px;margin-bottom:16px}
+.header h1{margin:0}
+.header p{margin:6px 0 0;color:var(--muted)}
+.toolbar{position:sticky;top:10px;background:rgba(11,18,38,.95);padding:10px;border-radius:12px;display:flex;gap:8px;flex-wrap:wrap;z-index:10;margin-bottom:16px}
+button,input{padding:10px;border-radius:10px;border:1px solid #334}
+button{cursor:pointer;background:var(--panel2);color:white}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+.card{background:var(--panel);padding:14px;border-radius:14px;text-align:center}
+.card .num{font-size:28px;font-weight:bold}
+.venue{background:var(--panel);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.venuehead{padding:12px 16px;font-weight:bold;background:#20346d;cursor:pointer}
+.cams{padding:10px}
+.cam{background:#101b3c;border-radius:12px;padding:12px;margin-bottom:10px}
+.cam input,.cam select{margin:3px;width:calc(50% - 12px)}
+.status-active{border-left:5px solid var(--green)}
+.status-disabled{border-left:5px solid var(--red)}
+.actions{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.small{font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
-<h1>Camera Admin v3</h1>
-
-<div class="toolbar">
-<button onclick="addCamera()">+ Add Camera</button>
-<button onclick="checkAll()">Check All Cameras</button>
-<button onclick="showFailed()">Show Failed</button>
-<button onclick="disableFailed()">Disable Failed</button>
-<button onclick="download()">Download cams.json</button>
-<span id="progress"></span>
+<div class="header">
+<h1>Lakefront at LOTO</h1>
+<p>Operations Center</p>
 </div>
 
-<div id="list"></div>
+<div class="toolbar">
+<button>Add Camera</button>
+<button>Check All Cameras</button>
+<button>Show Failed</button>
+<button>Disable Failed</button>
+<button>Download cams.json</button>
+<input placeholder="Search cameras...">
+</div>
 
-<script>
-let cams=[];
-let failedOnly=false;
+<div class="cards">
+<div class="card"><div class="num">32</div>Total Cameras</div>
+<div class="card"><div class="num">29</div>Active</div>
+<div class="card"><div class="num">3</div>Failed</div>
+<div class="card"><div class="num">12</div>Favorites</div>
+</div>
 
-async function load(){
- const r=await fetch('cams.json');
- cams=await r.json();
- render();
-}
+<div class="venue">
+<div class="venuehead">▼ Dog Days (4)</div>
+<div class="cams">
+<div class="cam status-active">
+<div><strong>Pool</strong></div>
+<div class="small">🟢 Active | ✅ Reachable</div>
+<div class="actions">
+<button>Open</button><button>Check</button><button>Edit</button>
+</div>
+</div>
+</div>
+</div>
 
-function render(){
- const list=document.getElementById('list');
- list.innerHTML='';
- cams.forEach((c,i)=>{
-   if(failedOnly && c.health!=='failed') return;
-
-   const row=document.createElement('div');
-   row.className='row '+(c.health||'');
-
-   row.innerHTML=`
-   <input value="${c.venue||''}" onchange="cams[${i}].venue=this.value">
-   <input value="${c.camera_name||''}" onchange="cams[${i}].camera_name=this.value">
-   <select onchange="cams[${i}].provider=this.value">
-      <option ${c.provider==='twitch'?'selected':''}>twitch</option>
-      <option ${c.provider==='ipcamlive.com'?'selected':''}>ipcamlive.com</option>
-      <option ${c.provider==='hls'?'selected':''}>hls</option>
-   </select>
-   <input value="${c.source||''}" size="20" onchange="cams[${i}].source=this.value">
-   <input value="${c.slug||''}" onchange="cams[${i}].slug=this.value">
-   <select onchange="cams[${i}].status=this.value">
-      <option value="active" ${c.status==='active'?'selected':''}>active</option>
-      <option value="disabled" ${c.status==='disabled'?'selected':''}>disabled</option>
-   </select>
-   <button onclick="toggleFav(${i})">${c.favorite?'⭐':'☆'}</button>
-   <button onclick="checkOne(${i})">Check</button>
-   <button onclick="delCamera(${i})">Delete</button>
-   <span class="small">${c.health||'not checked'} ${c.last_checked||''}</span>
-   `;
-   list.appendChild(row);
- });
-}
-
-function addCamera(){
- cams.push({
-  venue:'',
-  camera_name:'',
-  provider:'twitch',
-  source:'',
-  slug:'',
-  status:'active',
-  favorite:false
- });
- render();
-}
-
-function delCamera(i){
- if(confirm('Delete camera?')){
-   cams.splice(i,1);
-   render();
- }
-}
-
-function toggleFav(i){
- cams[i].favorite=!cams[i].favorite;
- render();
-}
-
-async function probe(c){
- try{
-   let url=c.provider==='twitch'
-     ? 'https://www.twitch.tv/'+c.source
-     : c.source;
-   await fetch(url,{mode:'no-cors'});
-   return 'reachable';
- }catch(e){
-   return 'failed';
- }
-}
-
-async function checkOne(i){
- cams[i].health='checking';
- render();
- const r=await probe(cams[i]);
- cams[i].health=r;
- cams[i].last_checked=new Date().toLocaleString();
- render();
-}
-
-async function checkAll(){
- let done=0;
- for(let i=0;i<cams.length;i++){
-   document.getElementById('progress').textContent=`${done}/${cams.length}`;
-   await checkOne(i);
-   done++;
- }
- document.getElementById('progress').textContent=`${cams.length}/${cams.length} complete`;
-}
-
-function showFailed(){
- failedOnly=!failedOnly;
- render();
-}
-
-function disableFailed(){
- cams.forEach(c=>{
-   if(c.health==='failed') c.status='disabled';
- });
- render();
-}
-
-function download(){
- const blob=new Blob([JSON.stringify(cams,null,2)],{type:'application/json'});
- const a=document.createElement('a');
- a.href=URL.createObjectURL(blob);
- a.download='cams.json';
- a.click();
-}
-
-load();
-</script>
+<p class="small">This is a visual redesign template matching the consumer site styling. Wire this styling into your current admin_v3 functionality.</p>
 </body>
 </html>
