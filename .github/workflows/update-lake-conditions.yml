@@ -1,40 +1,42 @@
 name: Update Lake Conditions
 
-'on':
-  workflow_dispatch:
+on:
+workflow_dispatch:
 
-  schedule:
-    - cron: '0 11 * * *'
-    - cron: '0 23 * * *'
-        
+schedule:
+- cron: '0 11 * * *'
+- cron: '0 23 * * *'
+
 jobs:
-  update:
-    runs-on: ubuntu-latest
+update:
+runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+```
+permissions:
+  contents: write
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+steps:
+  - uses: actions/checkout@v4
 
-- name: Install dependencies
-  run: |
-    pip install requests playwright
-    playwright install chromium
+  - name: Set up Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: '3.11'
 
-      - name: Update lake conditions
-        run: |
-          python scripts/update_lake_conditions.py
+  - name: Install dependencies
+    run: |
+      pip install requests playwright
+      playwright install chromium
 
-      - name: Commit changes
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+  - name: Update lake conditions
+    run: |
+      python scripts/update_lake_conditions.py
 
-          git add lake_conditions.json
-
-          git diff --staged --quiet || git commit -m "Update lake conditions"
-
-          git push
+  - name: Commit changes
+    run: |
+      git config user.name "github-actions"
+      git config user.email "github-actions@github.com"
+      git add lake_conditions.json
+      git diff --staged --quiet || git commit -m "Update lake conditions"
+      git push
+```
