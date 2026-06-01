@@ -22,14 +22,14 @@ body.scrolled .header h1{font-size:22px}
 body.scrolled .header p{opacity:0;max-height:0;overflow:hidden;margin:0}
 .header h1{margin:0;font-size:32px}
 .header p{margin:4px 0 0;color:var(--muted)}
-.toolbar{position:sticky;top:10px;background:rgba(19,32,70,.98);padding:12px;border-radius:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;z-index:200;box-shadow:0 10px 25px rgba(0,0,0,.45), 0 2px 0 #3550a8}
+.toolbar{position:sticky;top:72px;background:rgba(19,32,70,.95);padding:12px;border-radius:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;z-index:100}
 button,input,select{padding:10px;border-radius:10px;border:1px solid #3550a8}
 button{background:var(--panel2);color:white;cursor:pointer}
 input,select{background:#0f1730;color:white}
 #stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
 .stat{background:var(--panel);padding:14px;border-radius:14px;text-align:center}
 .stat .n{font-size:26px;font-weight:bold}
-.row{background:#101b3c;border:1px solid #3550a8;padding:12px;margin:10px 0;border-radius:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row{background:#101b3c;border:1px solid #3550a8;padding:12px;margin:10px 0;border-radius:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;touch-action:none}.dragging{opacity:.5}.drop-target{outline:2px dashed #4f7cff}
 .reachable{border-left:5px solid var(--green)}
 .failed{border-left:5px solid var(--red)}
 .small{font-size:12px;color:#c6d0ee}
@@ -51,10 +51,10 @@ input,select{background:#0f1730;color:white}
 <div class="toolbar">
 <button onclick="addCamera()">+ Add Camera</button>
 <button onclick="checkAll()">Check All Cameras</button>
-<button onclick="showFailed()">Show Failed</button><button onclick="toggleFavorites()">Favorites</button>
+<button onclick="showFailed()">Show Failed</button>
 <button onclick="disableFailed()">Disable Failed</button>
 <button onclick="download()">Download cams.json</button>
-<progress id="progressbar" value="0" max="100" style="width:200px"></progress> <span id="progress"></span>
+<progress id="progressbar" value="0" max="100" style="width:200px;display:none"></progress> <span id="progress"></span>
 </div>
 
 <div id="list"></div>
@@ -62,7 +62,6 @@ input,select{background:#0f1730;color:white}
 <script>
 let cams=[];
 let failedOnly=false;
-let favoritesOnly=false;
 let dragIndex=null;
 
 async function load(){
@@ -85,7 +84,6 @@ document.getElementById('stats').innerHTML=`
  list.innerHTML='';
  cams.forEach((c,i)=>{
    if(failedOnly && c.health!=='failed') return;
-   if(favoritesOnly && !c.favorite) return;
 
    const row=document.createElement('div');
    row.className='row '+(c.health||'');
@@ -175,6 +173,7 @@ async function checkOne(i){
 }
 
 async function checkAll(){
+ document.getElementById('progressbar').style.display='inline-block';
  let done=0;
  for(let i=0;i<cams.length;i++){
    document.getElementById('progress').textContent=`${done}/${cams.length}`;
@@ -183,16 +182,11 @@ document.getElementById('progressbar').value=(done/cams.length)*100;
    done++;
  }
  document.getElementById('progress').textContent=`${cams.length}/${cams.length} complete`;
-document.getElementById('progressbar').value=100;
+document.getElementById('progressbar').value=100; setTimeout(()=>{document.getElementById('progressbar').style.display='none';document.getElementById('progress').textContent='';},1500);
 }
 
 function showFailed(){
  failedOnly=!failedOnly;
- render();
-}
-
-function toggleFavorites(){
- favoritesOnly=!favoritesOnly;
  render();
 }
 
@@ -225,6 +219,35 @@ function moveDown(i){
 window.addEventListener('scroll',()=>{
  document.body.classList.toggle('scrolled', window.scrollY>60);
 });
+
+let touchDragIndex=null;
+
+function enableTouchDrag(){
+ document.querySelectorAll('.row').forEach((row,idx)=>{
+   row.ontouchstart=(e)=>{
+      touchDragIndex=idx;
+      row.classList.add('dragging');
+   };
+   row.ontouchend=(e)=>{
+      row.classList.remove('dragging');
+      const el=document.elementFromPoint(
+        e.changedTouches[0].clientX,
+        e.changedTouches[0].clientY
+      );
+      const target=el?.closest('.row');
+      if(!target) return;
+      const rows=[...document.querySelectorAll('.row')];
+      const targetIndex=rows.indexOf(target);
+      if(targetIndex>=0 && targetIndex!==touchDragIndex){
+        const moved=cams.splice(touchDragIndex,1)[0];
+        cams.splice(targetIndex,0,moved);
+        render();
+      }
+      touchDragIndex=null;
+   };
+ });
+}
+
 load();
 
 </script>
