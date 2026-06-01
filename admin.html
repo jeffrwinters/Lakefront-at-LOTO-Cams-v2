@@ -55,8 +55,7 @@ padding:0 20px 12px 20px;
 <p>Operations Center</p>
 </div>
 </div>
-<div id="stats"></div>
-
+</div><div id="stats"></div>
 
 <div class="toolbar">
 <button onclick="addCamera()">+ Add Camera</button>
@@ -65,7 +64,7 @@ padding:0 20px 12px 20px;
 <button onclick="disableFailed()">Disable Failed</button>
 <button onclick="download()">Download cams.json</button>
 <progress id="progressbar" value="0" max="100" style="width:200px;display:none"></progress> <span id="progress"></span>
-</div></div>
+</div>
 
 <div id="list"></div>
 
@@ -112,7 +111,7 @@ document.getElementById('stats').innerHTML=`
    };
 
    row.innerHTML=`
-   <button title="Top" onclick="moveTop(${i})">⏶⏶</button><button title="Move Up" onclick="moveUp(${i})">⏶</button><button title="Move Down" onclick="moveDown(${i})">⏷</button><button title="Bottom" onclick="moveBottom(${i})">⏷⏷</button>
+   <button title="Top" onclick="moveTop(${i})">⇑</button><button title="Move Up" onclick="moveUp(${i})">↑</button><button title="Move Down" onclick="moveDown(${i})">↓</button><button title="Bottom" onclick="moveBottom(${i})">⇓</button>
 
    <input value="${c.venue||''}" onchange="cams[${i}].venue=this.value">
    <input value="${c.camera_name||''}" onchange="cams[${i}].camera_name=this.value">
