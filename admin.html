@@ -22,7 +22,7 @@ body.scrolled .header h1{font-size:22px}
 body.scrolled .header p{opacity:0;max-height:0;overflow:hidden;margin:0}
 .header h1{margin:0;font-size:32px}
 .header p{margin:4px 0 0;color:var(--muted)}
-.toolbar{position:sticky;top:64px;background:rgba(19,32,70,.98);padding:12px;border-radius:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;z-index:200;box-shadow:0 12px 30px rgba(0,0,0,.55), 0 3px 0 #3550a8, 0 20px 20px rgba(8,16,31,.6)}
+.toolbar{position:sticky;top:58px;background:#132046;padding:12px;border-radius:0 0 14px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;z-index:240;box-shadow:0 14px 30px rgba(0,0,0,.55),0 3px 0 #3550a8}
 button,input,select{padding:10px;border-radius:10px;border:1px solid #3550a8}
 button{background:var(--panel2);color:white;cursor:pointer}
 input,select{background:#0f1730;color:white}
@@ -34,25 +34,6 @@ input,select{background:#0f1730;color:white}
 .failed{border-left:5px solid var(--red)}
 .small{font-size:12px;color:#c6d0ee}
 </style>
-
-
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
-<script>
-function enableSortable(){
- const list=document.getElementById('list');
- if(!list) return;
- if(list._sortable) list._sortable.destroy();
- list._sortable = new Sortable(list,{
-   animation:150,
-   handle:'[data-drag]',
-   onEnd:function(evt){
-      const moved = cams.splice(evt.oldIndex,1)[0];
-      cams.splice(evt.newIndex,0,moved);
-      render();
-   }
- });
-}
-</script>
 
 </head>
 <body>
@@ -121,8 +102,7 @@ document.getElementById('stats').innerHTML=`
    };
 
    row.innerHTML=`
-   <button title="Move Up" onclick="moveUp(${i})">▲</button>
-   <button title="Move Down" onclick="moveDown(${i})">▼</button>
+   <button title="Top" onclick="moveTop(${i})">⏫</button><button title="Move Up" onclick="moveUp(${i})">▲</button><button title="Move Down" onclick="moveDown(${i})">▼</button><button title="Bottom" onclick="moveBottom(${i})">⏬</button>
 
    <input value="${c.venue||''}" onchange="cams[${i}].venue=this.value">
    <input value="${c.camera_name||''}" onchange="cams[${i}].camera_name=this.value">
@@ -137,7 +117,7 @@ document.getElementById('stats').innerHTML=`
       <option value="active" ${c.status==='active'?'selected':''}>active</option>
       <option value="disabled" ${c.status==='disabled'?'selected':''}>disabled</option>
    </select>
-   <span data-drag="1" style="cursor:grab;font-size:22px;padding:6px">☰</span>
+   <span style="cursor:grab;font-size:18px">☰</span>
    <button onclick="toggleFav(${i})">${c.favorite?'⭐':'☆'}</button>
    <button onclick="checkOne(${i})">Check</button>
    <button onclick="delCamera(${i})">Delete</button>
@@ -202,7 +182,7 @@ document.getElementById('progressbar').value=(done/cams.length)*100;
    done++;
  }
  document.getElementById('progress').textContent=`${cams.length}/${cams.length} complete`;
-document.getElementById('progressbar').value=100; setTimeout(()=>{document.getElementById('progressbar').style.display='none';document.getElementById('progress').textContent='';},1200);
+document.getElementById('progressbar').value=100; setTimeout(()=>{document.getElementById('progressbar').style.display='none';document.getElementById('progress').textContent='';},1500);
 }
 
 function showFailed(){
@@ -231,7 +211,21 @@ function download(){
 }
 
 
+
+function moveTop(i){
+ if(i<1) return;
+ const c=cams.splice(i,1)[0];
+ cams.unshift(c);
+ render();
+}
+function moveBottom(i){
+ if(i>=cams.length-1) return;
+ const c=cams.splice(i,1)[0];
+ cams.push(c);
+ render();
+}
 function moveUp(i){
+
  if(i<1) return;
  [cams[i-1],cams[i]]=[cams[i],cams[i-1]];
  render();
