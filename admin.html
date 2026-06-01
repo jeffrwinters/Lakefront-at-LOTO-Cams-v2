@@ -3,79 +3,147 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lakefront at LOTO - Camera Admin</title>
+<title>Lakefront Camera Operations</title>
 <style>
 body{font-family:Arial,sans-serif;background:#0b1226;color:#fff;margin:0;padding:20px}
-h1{margin-top:0}
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
-input{padding:8px}
-button{padding:8px 12px;cursor:pointer}
-.stats{margin:10px 0}
-.row{display:flex;align-items:center;justify-content:space-between;padding:10px;border:1px solid #334;margin-bottom:6px;border-radius:8px}
-.disabled{opacity:.6}
-.name{font-weight:bold}
+h1{margin:0 0 15px}
+.toolbar,.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+input,button{padding:10px;border-radius:8px;border:1px solid #334}
+button{cursor:pointer}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0 16px}
+.card{background:#132046;padding:10px 14px;border-radius:10px}
+.banner{display:none;background:#5a4200;padding:10px;border-radius:8px;margin-bottom:12px}
+.banner.show{display:block}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px;margin-bottom:6px;border-radius:10px;border:1px solid #334}
+.activeRow{background:rgba(0,128,0,.15)}
+.disabledRow{background:rgba(128,0,0,.15)}
+.left{display:flex;align-items:center;gap:10px}
+.drag{cursor:grab;font-size:20px}
 .meta{font-size:12px;color:#bcd}
+.fav{cursor:pointer}
+.filter.active{outline:2px solid #7ea1ff}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
 </style>
 </head>
 <body>
-<h1>Camera Admin</h1>
+<h1>Camera Operations Dashboard</h1>
+
+<div id="changes" class="banner">Unsaved changes pending. Download cams.json when finished.</div>
 
 <div class="toolbar">
-<input id="search" placeholder="Search cameras..." oninput="render()">
+<input id="search" placeholder="Search..." oninput="render()">
+<button onclick="sortAZ()">A-Z</button>
+<button onclick="sortVenue()">Venue</button>
 <button onclick="enableAll()">Enable All</button>
 <button onclick="disableAll()">Disable All</button>
 <button onclick="exportJson()">Download cams.json</button>
 </div>
 
-<div class="stats" id="stats">Loading...</div>
+<div class="filters">
+<button class="filter active" onclick="setFilter('all',this)">All</button>
+<button class="filter" onclick="setFilter('active',this)">Active</button>
+<button class="filter" onclick="setFilter('disabled',this)">Disabled</button>
+</div>
+
+<div class="stats" id="stats"></div>
 <div id="list"></div>
 
 <script>
 let cams=[];
+let filter='all';
+let dirty=false;
 
 async function load(){
-  const r=await fetch('cams.json');
-  cams=await r.json();
-  render();
+ const r=await fetch('cams.json');
+ cams=await r.json();
+ render();
+}
+
+function markDirty(){
+ dirty=true;
+ document.getElementById('changes').classList.add('show');
+}
+
+function setFilter(f,btn){
+ filter=f;
+ document.querySelectorAll('.filter').forEach(b=>b.classList.remove('active'));
+ btn.classList.add('active');
+ render();
 }
 
 function render(){
-  const q=document.getElementById('search').value.toLowerCase();
-  const list=document.getElementById('list');
-  const active=cams.filter(c=>c.status==='active').length;
-  document.getElementById('stats').textContent=`${active} Active | ${cams.length-active} Disabled | ${cams.length} Total`;
+ const q=document.getElementById('search').value.toLowerCase();
+ const active=cams.filter(c=>c.status==='active').length;
+ document.getElementById('stats').innerHTML=`
+ <div class="card">Total ${cams.length}</div>
+ <div class="card">🟢 ${active} Active</div>
+ <div class="card">🔴 ${cams.length-active} Disabled</div>`;
 
-  list.innerHTML='';
-  cams.filter(c=>
-    (`${c.venue} ${c.camera_name}`).toLowerCase().includes(q)
-  ).forEach((cam,i)=>{
-    const div=document.createElement('div');
-    div.className='row '+(cam.status==='disabled'?'disabled':'');
-    div.innerHTML=`
+ const list=document.getElementById('list');
+ list.innerHTML='';
+
+ cams.forEach((cam,i)=>{
+   if(filter!=='all' && cam.status!==filter) return;
+   if(!(`${cam.venue} ${cam.camera_name}`).toLowerCase().includes(q)) return;
+
+   const row=document.createElement('div');
+   row.className='row '+(cam.status==='active'?'activeRow':'disabledRow');
+   row.draggable=true;
+
+   row.ondragstart=e=>e.dataTransfer.setData('idx',i);
+   row.ondragover=e=>e.preventDefault();
+   row.ondrop=e=>{
+      e.preventDefault();
+      const from=parseInt(e.dataTransfer.getData('idx'));
+      const moved=cams.splice(from,1)[0];
+      cams.splice(i,0,moved);
+      markDirty();
+      render();
+   };
+
+   const fav = cam.favorite ? '⭐' : '☆';
+
+   row.innerHTML=`
+   <div class="left">
+      <div class="drag">☰</div>
+      <div class="fav" onclick="toggleFav(${i})">${fav}</div>
       <div>
-        <div class="name">${cam.venue} — ${cam.camera_name}</div>
-        <div class="meta">${cam.provider} | ${cam.status}</div>
+        <div><b>${cam.venue} — ${cam.camera_name}</b></div>
+        <div class="meta">${cam.provider||''} | ${cam.status}</div>
       </div>
+   </div>
+   <div class="actions">
+      <button onclick="openCam(${i})">Open</button>
       <button onclick="toggle(${i})">${cam.status==='active'?'Disable':'Enable'}</button>
-    `;
-    list.appendChild(div);
-  });
+   </div>`;
+   list.appendChild(row);
+ });
 }
 
-function toggle(i){
-  cams[i].status = cams[i].status==='active' ? 'disabled' : 'active';
-  render();
+function toggle(i){ cams[i].status=cams[i].status==='active'?'disabled':'active'; markDirty(); render(); }
+function toggleFav(i){ cams[i].favorite=!cams[i].favorite; markDirty(); render(); }
+
+function openCam(i){
+ const c=cams[i];
+ if(c.provider && c.provider.toLowerCase().includes('twitch'))
+   window.open('https://www.twitch.tv/'+c.source,'_blank');
+ else
+   window.open(c.source,'_blank');
 }
 
-function enableAll(){ cams.forEach(c=>c.status='active'); render(); }
-function disableAll(){ cams.forEach(c=>c.status='disabled'); render(); }
+function sortAZ(){ cams.sort((a,b)=>(a.venue+' '+a.camera_name).localeCompare(b.venue+' '+b.camera_name)); markDirty(); render(); }
+function sortVenue(){ cams.sort((a,b)=>a.venue.localeCompare(b.venue)||a.camera_name.localeCompare(b.camera_name)); markDirty(); render(); }
+function enableAll(){ cams.forEach(c=>c.status='active'); markDirty(); render(); }
+function disableAll(){ cams.forEach(c=>c.status='disabled'); markDirty(); render(); }
 
 function exportJson(){
-  const blob=new Blob([JSON.stringify(cams,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='cams.json';
-  a.click();
+ const blob=new Blob([JSON.stringify(cams,null,2)],{type:'application/json'});
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);
+ a.download='cams.json';
+ a.click();
+ dirty=false;
+ document.getElementById('changes').classList.remove('show');
 }
 
 load();
