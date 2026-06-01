@@ -117,7 +117,7 @@ document.getElementById('stats').innerHTML=`
    <input value="${c.camera_name||''}" onchange="cams[${i}].camera_name=this.value">
    <select onchange="cams[${i}].provider=this.value">
       <option ${c.provider==='twitch'?'selected':''}>twitch</option>
-      <option ${c.provider==='ipcamlive.com'?'selected':''}>ipcamlive.com</option>
+      <option value="ipcamlive" ${c.provider==='ipcamlive' || c.provider==='ipcamlive.com'?'selected':''}>IPCamLive</option>
       <option ${c.provider==='hls'?'selected':''}>hls</option>
    </select>
    <input value="${c.source||''}" size="20" onchange="cams[${i}].source=this.value">
@@ -163,9 +163,17 @@ function toggleFav(i){
 
 async function probe(c){
  try{
-   let url=c.provider==='twitch'
-     ? 'https://www.twitch.tv/'+c.source
-     : c.source;
+   let url='';
+
+   if(c.provider==='twitch'){
+     url='https://www.twitch.tv/'+c.source;
+   }
+   else if(c.provider==='ipcamlive' || c.provider==='ipcamlive.com'){
+     url='https://g1.ipcamlive.com/player/player.php?alias='+c.source;
+   }
+   else{
+     url=c.source;
+   }
    await fetch(url,{mode:'no-cors'});
    return 'reachable';
  }catch(e){
