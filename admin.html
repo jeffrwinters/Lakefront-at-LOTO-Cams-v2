@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lakefront at LOTO - Camera Admin</title>
+<style>
+body{font-family:Arial,sans-serif;background:#0b1226;color:#fff;margin:0;padding:20px}
+h1{margin-top:0}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+input{padding:8px}
+button{padding:8px 12px;cursor:pointer}
+.stats{margin:10px 0}
+.row{display:flex;align-items:center;justify-content:space-between;padding:10px;border:1px solid #334;margin-bottom:6px;border-radius:8px}
+.disabled{opacity:.6}
+.name{font-weight:bold}
+.meta{font-size:12px;color:#bcd}
+</style>
+</head>
+<body>
+<h1>Camera Admin</h1>
+
+<div class="toolbar">
+<input id="search" placeholder="Search cameras..." oninput="render()">
+<button onclick="enableAll()">Enable All</button>
+<button onclick="disableAll()">Disable All</button>
+<button onclick="exportJson()">Download cams.json</button>
+</div>
+
+<div class="stats" id="stats">Loading...</div>
+<div id="list"></div>
+
+<script>
+let cams=[];
+
+async function load(){
+  const r=await fetch('cams.json');
+  cams=await r.json();
+  render();
+}
+
+function render(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const list=document.getElementById('list');
+  const active=cams.filter(c=>c.status==='active').length;
+  document.getElementById('stats').textContent=`${active} Active | ${cams.length-active} Disabled | ${cams.length} Total`;
+
+  list.innerHTML='';
+  cams.filter(c=>
+    (`${c.venue} ${c.camera_name}`).toLowerCase().includes(q)
+  ).forEach((cam,i)=>{
+    const div=document.createElement('div');
+    div.className='row '+(cam.status==='disabled'?'disabled':'');
+    div.innerHTML=`
+      <div>
+        <div class="name">${cam.venue} — ${cam.camera_name}</div>
+        <div class="meta">${cam.provider} | ${cam.status}</div>
+      </div>
+      <button onclick="toggle(${i})">${cam.status==='active'?'Disable':'Enable'}</button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function toggle(i){
+  cams[i].status = cams[i].status==='active' ? 'disabled' : 'active';
+  render();
+}
+
+function enableAll(){ cams.forEach(c=>c.status='active'); render(); }
+function disableAll(){ cams.forEach(c=>c.status='disabled'); render(); }
+
+function exportJson(){
+  const blob=new Blob([JSON.stringify(cams,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='cams.json';
+  a.click();
+}
+
+load();
+</script>
+</body>
+</html>
