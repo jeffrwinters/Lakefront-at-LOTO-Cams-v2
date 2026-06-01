@@ -27,7 +27,10 @@ def get_ameren_data():
     html = requests.get(AMEREN_URL, timeout=30).text
 
     print("HTML LENGTH:", len(html))
-    print(html[:5000])
+    print("HEADWATER FOUND:", "Headwater" in html)
+    print("TAILWATER FOUND:", "Tailwater" in html)
+    print("DISCHARGE FOUND:", "Discharge" in html)
+    print("REPORT FOUND:", "658." in html)
 
     raise Exception("Debug stop")
 
