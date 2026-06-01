@@ -4,30 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Lakefront Admin v3</title>
-
 <style>
-:root{--bg:#08101f;--panel:#132046;--panel2:#1b2f63;--text:#fff;--muted:#c6d0ee;--green:#2ecc71;--red:#ff6b6b}
-body{font-family:Arial,sans-serif;background:linear-gradient(180deg,#08101f,#0b1226);color:white;padding:20px;margin:0}
-.header{background:var(--panel);padding:18px;border-radius:16px;margin-bottom:16px}
-.header h1{margin:0}
-.header p{margin:6px 0 0;color:var(--muted)}
-.toolbar{position:sticky;top:10px;background:rgba(19,32,70,.95);padding:12px;border-radius:14px;display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;z-index:100}
-button,input,select{padding:10px;border-radius:10px;border:1px solid #334}
-button{background:var(--panel2);color:white;cursor:pointer}
-#stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
-.stat{background:var(--panel);padding:14px;border-radius:14px;text-align:center}
-.stat .n{font-size:26px;font-weight:bold}
-.row{background:#101b3c;border:1px solid #334;padding:12px;margin:10px 0;border-radius:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.reachable{border-left:5px solid var(--green)}
-.failed{border-left:5px solid var(--red)}
-.small{font-size:12px;color:#c6d0ee}
-input{background:#0f1730;color:white}
-select{background:#0f1730;color:white}
+body{font-family:Arial;background:#0b1226;color:white;padding:20px}
+.toolbar,.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar{margin-bottom:15px}
+input,select,button{padding:8px}
+.row{border:1px solid #334;padding:10px;margin:8px 0;border-radius:8px}
+.failed{background:#401818}
+.reachable{background:#163a20}
+.small{font-size:12px;color:#ccc}
 </style>
-
 </head>
 <body>
-<div class="header"><h1>Lakefront at LOTO</h1><p>Operations Center</p></div><div id="stats"></div>
+<h1>Camera Admin v3</h1>
 
 <div class="toolbar">
 <button onclick="addCamera()">+ Add Camera</button>
@@ -35,7 +24,7 @@ select{background:#0f1730;color:white}
 <button onclick="showFailed()">Show Failed</button>
 <button onclick="disableFailed()">Disable Failed</button>
 <button onclick="download()">Download cams.json</button>
-<span id="progress"></span>
+<progress id="progressbar" value="0" max="100" style="width:200px"></progress> <span id="progress"></span>
 </div>
 
 <div id="list"></div>
@@ -43,6 +32,7 @@ select{background:#0f1730;color:white}
 <script>
 let cams=[];
 let failedOnly=false;
+let dragIndex=null;
 
 async function load(){
  const r=await fetch('cams.json');
@@ -51,15 +41,6 @@ async function load(){
 }
 
 function render(){
-const active=cams.filter(c=>c.status==='active').length;
-const failed=cams.filter(c=>c.health==='failed').length;
-const favs=cams.filter(c=>c.favorite).length;
-document.getElementById('stats').innerHTML=`
-<div class="stat"><div class="n">${cams.length}</div><div>Cameras</div></div>
-<div class="stat"><div class="n">${active}</div><div>Active</div></div>
-<div class="stat"><div class="n">${failed}</div><div>Failed</div></div>
-<div class="stat"><div class="n">${favs}</div><div>Favorites</div></div>`;
-
  const list=document.getElementById('list');
  list.innerHTML='';
  cams.forEach((c,i)=>{
@@ -67,6 +48,17 @@ document.getElementById('stats').innerHTML=`
 
    const row=document.createElement('div');
    row.className='row '+(c.health||'');
+   row.draggable=true;
+   row.ondragstart=()=>{dragIndex=i};
+   row.ondragover=(e)=>e.preventDefault();
+   row.ondrop=(e)=>{
+      e.preventDefault();
+      if(dragIndex===null || dragIndex===i) return;
+      const moved=cams.splice(dragIndex,1)[0];
+      cams.splice(i,0,moved);
+      dragIndex=null;
+      render();
+   };
 
    row.innerHTML=`
    <input value="${c.venue||''}" onchange="cams[${i}].venue=this.value">
@@ -82,6 +74,7 @@ document.getElementById('stats').innerHTML=`
       <option value="active" ${c.status==='active'?'selected':''}>active</option>
       <option value="disabled" ${c.status==='disabled'?'selected':''}>disabled</option>
    </select>
+   <span style="cursor:grab;font-size:18px">☰</span>
    <button onclick="toggleFav(${i})">${c.favorite?'⭐':'☆'}</button>
    <button onclick="checkOne(${i})">Check</button>
    <button onclick="delCamera(${i})">Delete</button>
@@ -141,10 +134,12 @@ async function checkAll(){
  let done=0;
  for(let i=0;i<cams.length;i++){
    document.getElementById('progress').textContent=`${done}/${cams.length}`;
+document.getElementById('progressbar').value=(done/cams.length)*100;
    await checkOne(i);
    done++;
  }
  document.getElementById('progress').textContent=`${cams.length}/${cams.length} complete`;
+document.getElementById('progressbar').value=100;
 }
 
 function showFailed(){
