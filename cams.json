@@ -1,5 +1,16 @@
 [
   {
+    "venue": "JB Hooks",
+    "camera_name": "Bridge",
+    "provider": "ipcamlive.com",
+    "source": "",
+    "slug": "https://g1.ipcamlive.com/player/player.php?alias=jbhooksbridge",
+    "status": "active",
+    "favorite": false,
+    "health": "reachable",
+    "last_checked": "6/1/2026, 12:08:22 PM"
+  },
+  {
     "venue": "Bridgeview Marina",
     "camera_name": "Dock",
     "provider": "twitch",
