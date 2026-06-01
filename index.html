@@ -1638,20 +1638,15 @@ async function loadLakeConditions() {
     document.getElementById('windSpeed').textContent = wind + ' mph';
 
     // seasonal estimate fallback
-    const month = new Date().getMonth() + 1;
+try {
+  const waterRes = await fetch(`water_temp.json?v=${Date.now()}`);
+  const waterData = await waterRes.json();
 
-    let waterTemp = 55;
-
-    if (month <= 3) waterTemp = 48;
-    else if (month <= 4) waterTemp = 58;
-    else if (month <= 5) waterTemp = 68;
-    else if (month <= 6) waterTemp = 76;
-    else if (month <= 8) waterTemp = 84;
-    else if (month <= 9) waterTemp = 79;
-    else if (month <= 10) waterTemp = 68;
-    else waterTemp = 58;
-
-    document.getElementById('waterTemp').textContent = waterTemp + '°';
+  document.getElementById('waterTemp').textContent =
+    Math.round(waterData.waterTemp) + '°';
+} catch (e) {
+  document.getElementById('waterTemp').textContent = '--°';
+}
 
     // stable defaults for GitHub Pages
     document.getElementById('lakeLevel').textContent = '659 ft';
