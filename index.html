@@ -1234,8 +1234,7 @@ async function loadCamsData() {
 
   CAMS = allCams.filter(cam => cam.status === 'active');
 }
-// ─── State
- ────────────────────────────────────────────────────────────────────
+// ─── State ─────────────────────────────────────────────────────────────
 let currentIdx = 0;
 let cycleQueue = [];       // indices of cams in cycle
 let cycleQueuePos = 0;     // position within cycleQueue
@@ -1252,6 +1251,7 @@ function timerMs() {
 // ─── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
   await loadCamsData();
+  selectedCams = new Set(CAMS.map((_, i) => i));
   document.getElementById('camCount').textContent = CAMS.length + ' cams';
   buildSidebar();
   updateSelectedCount();
