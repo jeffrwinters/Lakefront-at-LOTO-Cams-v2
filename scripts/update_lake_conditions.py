@@ -3,6 +3,7 @@ import re
 from datetime import datetime, timezone
 
 import requests
+from playwright.sync_api import sync_playwright
 
 KRMS_URL = "https://www.krmsradio.com/watertemp/wx.html"
 AMEREN_URL = "https://www.ameren.com/reliability/generation/hydro/reports/osage/headwatertailwater"
@@ -24,26 +25,27 @@ def get_water_temp():
 
 
 def get_ameren_data():
-    html = requests.get(
-        AMEREN_URL,
-        timeout=30,
-        headers={
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/137.0.0.0 Safari/537.36"
-            )
-        }
-    ).text
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
 
-    if "659." in html:
-        print("FOUND TABLE DATA")
-    else:
-        print("NO TABLE DATA")
+        page = browser.new_page()
 
-    print(html[:10000])
+        page.goto(AMEREN_URL, wait_until="networkidle")
 
-    raise Exception("Debug stop")
+        page.wait_for_selector(".water_level_report_grid", timeout=30000)
+
+        first_row = page.locator(
+            ".water_level_report_grid tbody tr"
+        ).first
+
+        cells = first_row.locator("td").all_text_contents()
+
+        browser.close()
+
+    lake_level = float(cells[2].strip())
+    discharge = float(cells[4].replace(",", "").strip())
+
+    return lake_level, round(discharge / 1000)
 
 
 def calculate_trend(current_level):
