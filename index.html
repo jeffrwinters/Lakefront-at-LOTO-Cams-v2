@@ -288,21 +288,6 @@ function timerMs() {
   return parseInt(document.getElementById('timeSlider').value) * 1000;
 }
 
-
-// ─── User Preferences Persistence ────────────────────────────────────────────
-const STORAGE_KEYS = {
-  selectedCams: 'loto_selected_cams',
-  cycleInterval: 'loto_cycle_interval'
-};
-
-function savePreferences() {
-  try {
-    localStorage.setItem(STORAGE_KEYS.selectedCams, JSON.stringify([...selectedCams]));
-    localStorage.setItem(STORAGE_KEYS.cycleInterval, document.getElementById('timeSlider').value);
-  } catch (e) {}
-}
-
-
 // ─── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
   await loadCamsData();
