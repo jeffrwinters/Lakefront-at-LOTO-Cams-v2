@@ -168,6 +168,7 @@ Select the cams to include in the cycle from the All Cams list above.
 <div id="toast"></div>
 
 <script src="js/storage.js"></script>
+<script src="js/search.js"></script>
   
 <script>
 let CAMS = []; 
@@ -225,7 +226,7 @@ camList.scrollTop = scrollTop;
 document.getElementById('camSearch').value = searchValue;
 filterCams();
 
-// Restore scroll position
+// Restore scroll position 
 camList.scrollTop = scrollTop;
 
     document.getElementById('camCount').textContent =
@@ -516,8 +517,6 @@ function selectNone() {
   savePreferences();
 }
 
-
-
 // ─── Build UI ─────────────────────────────────────────────────────────────────
 function buildSidebar() {
   const list = document.getElementById('camList');
@@ -541,10 +540,6 @@ function buildSidebar() {
     list.appendChild(el);
   });
 }
-
-
-
-
 
 // ─── Direct Link ──────────────────────────────────────────────────────────────
 function openDirect() {
@@ -674,43 +669,6 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
-
-
-// ─── Cam Search ───────────────────────────────────────────────────────────────
-function filterCams() {
-  const input = document.getElementById('camSearch');
-
-  const val = input.value
-    .toLowerCase()
-    .trim();
-
-  const clearBtn = document.getElementById('clearSearchBtn');
-
-  clearBtn.style.display = val ? 'flex' : 'none';
-
-  document.querySelectorAll('.cam-item').forEach((el, i) => {
-    const cam = CAMS[i];
-
-   const text =
-  `${cam.venue} ${cam.camera_name} ${cam.source}`.toLowerCase();
-
-    el.style.display = text.includes(val) ? 'flex' : 'none';
-  });
-}
-
-function clearCamSearch() {
-  const input = document.getElementById('camSearch');
-
-  input.value = '';
-
-  filterCams();
-
-  input.focus();
-}
-
-
-
-
 // ─── Lake Conditions ─────────────────────────────────────────────────────────
 async function loadLakeConditions() {
   try {
