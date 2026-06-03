@@ -11,7 +11,7 @@
 
   gtag('config', 'G-X03KRRD2K0');
 </script>
-<script src="js/storage.js"></script>
+
 <meta content="https://lakefrontatloto.com/" property="og:url"/>
 <link href="https://lakefrontatloto.com/" rel="canonical"/>
 <meta charset="utf-8"/>
@@ -166,6 +166,9 @@ Select the cams to include in the cycle from the All Cams list above.
 </div>
 </main>
 <div id="toast"></div>
+
+<script src="js/storage.js"></script>
+  
 <script>
 let CAMS = []; 
 // ─── Camera Data ────────────────────────────────────────────────────────────
@@ -297,25 +300,6 @@ function savePreferences() {
     localStorage.setItem(STORAGE_KEYS.selectedCams, JSON.stringify([...selectedCams]));
     localStorage.setItem(STORAGE_KEYS.cycleInterval, document.getElementById('timeSlider').value);
   } catch (e) {}
-}
-
-function loadPreferences() {
-  try {
-    const savedInterval = localStorage.getItem(STORAGE_KEYS.cycleInterval);
-    if (savedInterval) {
-      document.getElementById('timeSlider').value = savedInterval;
-    }
-
-    const savedCams = localStorage.getItem(STORAGE_KEYS.selectedCams);
-    if (savedCams) {
-      const parsed = JSON.parse(savedCams);
-      selectedCams = new Set(parsed.filter(i => i >= 0 && i < CAMS.length));
-    } else {
-      selectedCams = new Set(CAMS.map((_, i) => i));
-    }
-  } catch (e) {
-    selectedCams = new Set(CAMS.map((_, i) => i));
-  }
 }
 
 
