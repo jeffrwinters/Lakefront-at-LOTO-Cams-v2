@@ -1,8 +1,8 @@
 {
-  "updated": "2026-09-22T11:05:13.898988+00:00",
+  "updated": "2026-09-22T23:11:30.573818+00:00",
   "waterTemp": 84,
   "lakeLevel": 658.0,
-  "discharge": 2,
+  "discharge": 1,
   "trend": "flat",
   "sources": {
     "waterTemp": "krms",
