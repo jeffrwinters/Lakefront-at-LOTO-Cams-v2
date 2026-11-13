@@ -131,7 +131,6 @@ async function init() {
 
   setupCastListeners();
 
-  await loadLakeConditions();
   setInterval(
   refreshCamsIfChanged,
   60 * 1000
